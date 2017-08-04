@@ -29,19 +29,20 @@ def on_connect(client, userdata, flags, rc):
         client.subscribe(topic)
 
 def on_message(denon, client, userdata, msg):
-    print('Received MQTT with topic:', msg.topic, 'and payload:', str(msg.payload))
+    payload = str(msg.payload, 'utf-8')
+    print('Received MQTT with topic:', msg.topic, 'and payload:', payload)
     if msg.topic == MQTT_REFRESH:
         refresh(denon, client)
     elif msg.topic == MQTT_POWER:
-        power(denon, client, msg.payload)
+        power(denon, client, payload)
     elif msg.topic == MQTT_VOLUME:
-        volume(denon, client, msg.payload)
+        volume(denon, client, payload)
     elif msg.topic == MQTT_MUTE:
-        mute(denon, client, msg.payload)
+        mute(denon, client, payload)
     elif msg.topic == MQTT_INPUT:
-        source(denon, client, msg.payload)
+        source(denon, client, payload)
     elif msg.topic == MQTT_PLAY:
-        play(denon, client, msg.payload)
+        play(denon, client, payload)
 
 
 def publishStatus(denon, mqttClient):
@@ -92,8 +93,27 @@ def mute(denon, mqttClient, arg):
         print('MUTE, invalid argument:', arg)
     refresh(denon, mqttClient)
 
+def updateInputList(denon):
+    inputMapping = {
+        'CD': 'CD',
+        'iPod/USB': 'USB/IPOD',
+        'Media Player': 'MPLAY',
+        'Blu-ray': 'BD',
+        'NETWORK': 'NET',
+        'FM': 'TUNER',
+        'GAME': 'GAME',
+        'DVD': 'DVD',
+        'CBL/SAT': 'SAT/CBL',
+        'AUX': 'AUX1',
+        'TV AUDIO': 'TV'
+    }
+    denon._input_func_list = inputMapping
+    return inputMapping
+
 def source(denon, mqttClient, arg):
-    if arg in denon.input_func_list:
+    inputMapping = updateInputList(denon)
+
+    if arg in inputMapping:
         denon.input_func = arg
     else:
         print('INPUT, invalid argument:', arg)
@@ -105,6 +125,8 @@ def play(denon, mqttClient, arg):
 
 if __name__ == '__main__':
     d = denonavr.DenonAVR('denon.fritz.box', 'Denon')
+    updateInputList(d)
+
     d.update()
 
     mqttClient = mqtt.Client()
