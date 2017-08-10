@@ -2,7 +2,7 @@ import json
 import denonavr
 import paho.mqtt.client as mqtt
 
-MQTT_BROKER = 'pluto.fritz.box'
+MQTT_BROKER = ''
 
 MQTT_REFRESH = 'wohnzimmer/devices/denon/refresh'
 MQTT_STATUS = 'wohnzimmer/devices/denon/status'
@@ -54,7 +54,7 @@ def publishStatus(denon, mqttClient):
         'input': denon.input_func
     }
     payload = json.dumps(result)
-    mqttClient.publish(MQTT_STATUS, payload=payload, qos=2, retain=True)
+    mqttClient.publish(MQTT_STATUS, payload=payload, qos=1, retain=False)
 
 def refresh(denon, mqttClient):
     denon.update()
@@ -72,10 +72,11 @@ def power(denon, mqttClient, arg):
 
 def volume(denon, mqttClient, arg):
     print('VOLUME, arg =', arg)
+    denon.update()
     if arg.lower() == 'up':
-        denon.volume_up()
+        denon.set_volume(denon.volume + 5)
     elif arg.lower() == 'down':
-        denon.volume_down()
+        denon.set_volume(denon.volume - 5)
     elif arg[0] == '-' and arg[1:].isdecimal():
         target_volume = -int(arg[1:])
         denon.set_volume(target_volume)
