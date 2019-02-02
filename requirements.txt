@@ -1,0 +1,2 @@
+denonavr==0.7.7
+paho-mqtt==1.4.0
